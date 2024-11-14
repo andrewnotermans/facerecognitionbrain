@@ -19,57 +19,68 @@ function App() {
             setInit(true);
         });
     }, []);
+    const MODEL_ID = 'face-detection';  
+    const returnClarifaiRequestOptions = (imageUrl) => {
+        // Your PAT (Personal Access Token) can be found in the Account's Security section
+        const PAT = '60df1f2fc09b470da2117dde445f6abf';
+        // Specify the correct user_id/app_id pairings
+        // Since you're making inferences outside your app's scope
+        const USER_ID = 'af8w21gvcx87';       
+        const APP_ID = 'image-recognition';
+        // Change these to whatever model and image URL you want to use
+          
+        const IMAGE_URL = imageUrl;
 
+        const raw = JSON.stringify({
+            "user_app_id": {
+                "user_id": USER_ID,
+                "app_id": APP_ID
+            },
+            "inputs": [
+                {
+                    "data": {
+                        "image": {
+                            "url": IMAGE_URL
+                        }
+                    }
+                }
+            ]
+        });
+        const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Key ' + PAT
+            },
+            body: raw
+        };
+        return requestOptions
+
+    }
+
+    
     const onInputChange = (event) => {
         setInput(event.target.value);
     };
 
     const onButtonSubmit = () => {
-        setImageUrl(input);  
-        const PAT = '60df1f2fc09b470da2117dde445f6abf';
-        const USER_ID = 'af8w21gvcx87';       
-        const APP_ID = 'image-recognition';
-        const MODEL_ID = 'general-image-recognition';
-        const IMAGE_URL = imageUrl;  // Use input directly here
-
-        const returnsetupClarifaiRequestOptions = (imageUrl) => {
-            const raw = JSON.stringify({
-                "user_app_id": {
-                    "user_id": USER_ID,
-                    "app_id": APP_ID
-                },
-                "inputs": [
-                    {
-                        "data": {
-                            "image": {
-                                "url": IMAGE_URL
-                            }
-                        }
-                    }
-                ]
-            });
-
-            const requestOptions = {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': 'Key ' + PAT
-                },
-                body: raw
-            };
-            return requestOptions;
-        };
-        const requestOptions = returnsetupClarifaiRequestOptions(imageUrl);
-
-        fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/outputs", requestOptions)
-        .then(response => response.text())
+        setImageUrl(imageUrl);
+         
+        fetch(`https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`, returnClarifaiRequestOptions(input))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
         .then(result => console.log(result))
-        .catch(error => console.log('error', error));
+        .catch(error => console.error('Error:', error));
+ 
     }
 
     const particlesLoaded = (container) => {
         console.log(container);
-    };
+    }
 
     return (
         <div className="App">
