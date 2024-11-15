@@ -12,6 +12,7 @@ function App() {
     const [init, setInit] = useState(false);
     const [input, setInput] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [box, setBox] = useState({});
 
     useEffect(() => {
         initParticlesEngine(async (engine) => {
@@ -59,6 +60,29 @@ function App() {
 
     }
 
+    const calculateFaceLocation = (data) =>{
+        
+        const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+        console.log(clarifaiFace);
+        const image = document.getElementById('inputimage');
+        const width = Number(image.width);
+        const height = Number(image.height);
+        let box = {
+            leftCol: clarifaiFace.left_col * width,
+            topRow: clarifaiFace.top_row * height,
+            rightCol: width - (clarifaiFace.right_col *  width),
+            bottomRow: height - (clarifaiFace.bottom_row * height)
+        }
+        return box;
+        
+
+    }
+
+    const displayFaceBox = (box) => {
+       setBox(box);
+       console.log(box);
+
+    }
     
     const onInputChange = (event) => {
         setInput(event.target.value);
@@ -68,23 +92,12 @@ function App() {
         setImageUrl(input);
         console.log({imageUrl});
         fetch(`https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`, returnClarifaiRequestOptions(input))
-        .then(console.log(response => response.outputs[0].data.regions))
         .then(response => response.json())
-        .then(data => {
-            console.log(data.outputs[0].data.regions[0].region_info.bounding_box); // Log the regions data
-            return data;
-        })
-            
+        .then(data => displayFaceBox(calculateFaceLocation(data)))        
+        .catch(error => console.error('Error:', error))
         
-        .then(result => console.log(result))
-        .catch(error => console.error('Error:', error));
  
     }
-
-    const particlesLoaded = (container) => {
-        console.log(container);
-    }
-
     const particlesOptions = {
         fpsLimit: 120,
         interactivity: {
@@ -131,7 +144,6 @@ function App() {
             {init && (
                 <Particles
                     id="tsparticles"
-                    particlesLoaded={particlesLoaded}
                     options={particlesOptions}
                 />
             )}
@@ -142,7 +154,7 @@ function App() {
                 onInputChange={onInputChange} 
                 onButtonSubmit={onButtonSubmit} 
             />
-            <FaceRecognition imageUrl = {imageUrl}/>
+            <FaceRecognition box={box} imageUrl = {imageUrl}/>
         </div>
     );
 }
