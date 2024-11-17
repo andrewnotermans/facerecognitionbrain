@@ -12,7 +12,7 @@ function App() {
     const [init, setInit] = useState(false);
     const [input, setInput] = useState('');
     const [imageUrl, setImageUrl] = useState('');
-    const [box, setBox] = useState({});
+    const [boxes, setBoxes] = useState([]);
 
     useEffect(() => {
         initParticlesEngine(async (engine) => {
@@ -21,17 +21,12 @@ function App() {
             setInit(true);
         });
     }, []);
+
     const MODEL_ID = 'face-detection';  
     const returnClarifaiRequestOptions = (imageUrl) => {
-        // Your PAT (Personal Access Token) can be found in the Account's Security section
         const PAT = '60df1f2fc09b470da2117dde445f6abf';
-        // Specify the correct user_id/app_id pairings
-        // Since you're making inferences outside your app's scope
         const USER_ID = 'af8w21gvcx87';       
         const APP_ID = 'image-recognition';
-        // Change these to whatever model and image URL you want to use
-          
-        const IMAGE_URL = imageUrl;
 
         const raw = JSON.stringify({
             "user_app_id": {
@@ -42,13 +37,13 @@ function App() {
                 {
                     "data": {
                         "image": {
-                            "url": IMAGE_URL
+                            "url": imageUrl
                         }
                     }
                 }
             ]
         });
-        const requestOptions = {
+        return {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -56,48 +51,43 @@ function App() {
             },
             body: raw
         };
-        return requestOptions
+    };
 
-    }
-
-    const calculateFaceLocation = (data) =>{
-        
-        const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
-        console.log(clarifaiFace);
+    const calculateFaceLocations = (data) => {
         const image = document.getElementById('inputimage');
         const width = Number(image.width);
         const height = Number(image.height);
-        let box = {
-            leftCol: clarifaiFace.left_col * width,
-            topRow: clarifaiFace.top_row * height,
-            rightCol: width - (clarifaiFace.right_col *  width),
-            bottomRow: height - (clarifaiFace.bottom_row * height)
-        }
-        return box;
-        
 
-    }
+        const regions = data.outputs[0].data.regions;
+        const boundingBoxes = regions.map(region => {
+            const boundingBox = region.region_info.bounding_box;
+            return {
+                leftCol: boundingBox.left_col * width,
+                topRow: boundingBox.top_row * height,
+                rightCol: width - (boundingBox.right_col * width),
+                bottomRow: height - (boundingBox.bottom_row * height),
+            };
+        });
+        return boundingBoxes;
+    };
 
-    const displayFaceBox = (box) => {
-       setBox(box);
-       console.log(box);
+    const displayFaceBoxes = (boxes) => {
+        setBoxes(boxes);
+        console.log(boxes);
+    };
 
-    }
-    
     const onInputChange = (event) => {
         setInput(event.target.value);
     };
 
     const onButtonSubmit = () => {
         setImageUrl(input);
-        console.log({imageUrl});
         fetch(`https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`, returnClarifaiRequestOptions(input))
-        .then(response => response.json())
-        .then(data => displayFaceBox(calculateFaceLocation(data)))        
-        .catch(error => console.error('Error:', error))
-        
- 
-    }
+            .then(response => response.json())
+            .then(data => displayFaceBoxes(calculateFaceLocations(data)))
+            .catch(error => console.error('Error:', error));
+    };
+
     const particlesOptions = {
         fpsLimit: 120,
         interactivity: {
@@ -137,7 +127,7 @@ function App() {
             size: { value: { min: 1, max: 5 } },
         },
         detectRetina: true,
-    }
+    };
 
     return (
         <div className="App">
@@ -154,7 +144,7 @@ function App() {
                 onInputChange={onInputChange} 
                 onButtonSubmit={onButtonSubmit} 
             />
-            <FaceRecognition box={box} imageUrl = {imageUrl}/>
+            <FaceRecognition boxes={boxes} imageUrl={imageUrl} />
         </div>
     );
 }
