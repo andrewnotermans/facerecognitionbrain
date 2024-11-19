@@ -16,7 +16,7 @@ function App() {
   const [imageUrl, setImageUrl] = useState("");
   const [boxes, setBoxes] = useState([]);
   const [route, setRoute] = useState("signin");
-  const [signedin, setSignedin] = useState(false);
+  const [issignedin, setIssignedin] = useState(false);
 
   useEffect(() => {
     initParticlesEngine(async (engine) => {
@@ -47,7 +47,7 @@ function App() {
         },
       ],
     });
-    return {
+    const requestOptions = {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -55,6 +55,7 @@ function App() {
       },
       body: raw,
     };
+    return requestOptions;
   };
 
   const calculateFaceLocations = (data) => {
@@ -139,9 +140,9 @@ function App() {
 
   const onRouteChange = (route) => {
     if (route === "signout") {
-      setSignedin(false);
+      setIssignedin(false);
     } else if (route === "home") {
-      setSignedin(true);
+      setIssignedin(true);
     }
     setRoute(route);
   };
@@ -149,7 +150,7 @@ function App() {
   return (
     <div className="App">
       {init && <Particles id="tsparticles" options={particlesOptions} />}
-      <Navigation isSignedIn={signedin} onRouteChange={onRouteChange} />
+      <Navigation isSignedIn={issignedin} onRouteChange={onRouteChange} />
 
       {route === "home" ? (
         <div>
