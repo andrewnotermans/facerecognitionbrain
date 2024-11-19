@@ -18,6 +18,14 @@ function App() {
   const [route, setRoute] = useState("signin");
   const [issignedin, setIssignedin] = useState(false);
 
+  //Replace componentDidMount with useEffect
+  // useEffect(() => {
+  //   fetch("http://localhost:3000/")
+  //     .then((response) => response.json())
+  //     .then(console.log)
+  //     .catch((error) => console.error("Error fetching data:", error));
+  // }, []); // Empty dependency array ensures it runs once, similar to componentDidMount
+
   useEffect(() => {
     initParticlesEngine(async (engine) => {
       await loadSlim(engine);
