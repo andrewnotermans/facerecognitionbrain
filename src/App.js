@@ -18,6 +18,14 @@ function App() {
   const [route, setRoute] = useState("signin");
   const [issignedin, setIssignedin] = useState(false);
 
+  const [user, setUser] = useState({
+    id: "",
+    name: "",
+    email: "",
+    entries: 0,
+    joined: "",
+  });
+
   //Replace componentDidMount with useEffect
   // useEffect(() => {
   //   fetch("http://localhost:3000/")
@@ -155,6 +163,16 @@ function App() {
     setRoute(route);
   };
 
+  const loadUser = (data) => {
+    setUser({
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined,
+    });
+  };
+
   return (
     <div className="App">
       {init && <Particles id="tsparticles" options={particlesOptions} />}
@@ -163,7 +181,7 @@ function App() {
       {route === "home" ? (
         <div>
           <Logo />
-          <Rank />
+          <Rank userName={user.name} entries={user.entries} />
           <ImageLinkForm
             onInputChange={onInputChange}
             onButtonSubmit={onButtonSubmit}
@@ -172,11 +190,11 @@ function App() {
         </div>
       ) : route === "signin" ? (
         <div>
-          <Signin onRouteChange={onRouteChange} />
+          <Signin loadUser={loadUser} onRouteChange={onRouteChange} />
         </div>
       ) : (
         <div>
-          <Register onRouteChange={onRouteChange} />
+          <Register loadUser={loadUser} onRouteChange={onRouteChange} />
         </div>
       )}
     </div>
