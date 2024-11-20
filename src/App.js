@@ -108,8 +108,35 @@ function App() {
       `https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`,
       returnClarifaiRequestOptions(input)
     )
-      .then((response) => response.json())
-      .then((data) => displayFaceBoxes(calculateFaceLocations(data)))
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json(); // Parse the response to JSON
+      })
+      .then((data) => {
+        // Process the data and display face boxes
+        const faceBoxes = calculateFaceLocations(data);
+        displayFaceBoxes(faceBoxes);
+
+        // Update user entries if necessary
+        return fetch("http://localhost:3000/image", {
+          method: "put",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: user.id,
+          }),
+        });
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to update entries");
+        }
+        return response.json();
+      })
+      .then((count) => {
+        setUser({ ...user, entries: count });
+      })
       .catch((error) => console.error("Error:", error));
   };
 
