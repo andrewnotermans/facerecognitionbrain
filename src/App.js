@@ -10,21 +10,24 @@ import Logo from "./components/Logo/Logo";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import Rank from "./components/Rank/Rank";
 
-function App() {
-  const [init, setInit] = useState(false);
-  const [input, setInput] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [boxes, setBoxes] = useState([]);
-  const [route, setRoute] = useState("signin");
-  const [issignedin, setIssignedin] = useState(false);
-
-  const [user, setUser] = useState({
+const initialState = {
+  input: "",
+  imageUrl: "",
+  boxes: [],
+  route: "signin",
+  isSignedin: false,
+  user: {
     id: "",
     name: "",
     email: "",
     entries: 0,
     joined: "",
-  });
+  },
+};
+
+function App() {
+  const [state, setState] = useState(initialState);
+  const [init, setInit] = useState(false);
 
   //Replace componentDidMount with useEffect
   // useEffect(() => {
@@ -78,7 +81,7 @@ function App() {
     const image = document.getElementById("inputimage");
     const width = Number(image.width);
     const height = Number(image.height);
-
+    console.log(data);
     const regions = data.outputs[0].data.regions;
     console.log(regions);
     const boundingBoxes = regions.map((region) => {
@@ -94,19 +97,27 @@ function App() {
   };
 
   const displayFaceBoxes = (boxes) => {
-    setBoxes(boxes);
-    console.log(boxes);
+    setState((prevState) => ({
+      ...prevState,
+      boxes: boxes,
+    }));
   };
 
   const onInputChange = (event) => {
-    setInput(event.target.value);
+    setState((prevState) => ({
+      ...prevState,
+      input: event.target.value,
+    }));
   };
 
   const onButtonSubmit = () => {
-    setImageUrl(input);
+    setState((prevState) => ({
+      ...prevState,
+      imageUrl: prevState.input,
+    }));
     fetch(
       `https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`,
-      returnClarifaiRequestOptions(input)
+      returnClarifaiRequestOptions(state.input)
     )
       .then((response) => {
         if (!response.ok) {
@@ -115,7 +126,6 @@ function App() {
         return response.json(); // Parse the response to JSON
       })
       .then((data) => {
-        // Process the data and display face boxes
         const faceBoxes = calculateFaceLocations(data);
         displayFaceBoxes(faceBoxes);
 
@@ -124,7 +134,7 @@ function App() {
           method: "put",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: user.id,
+            id: state.user.id,
           }),
         });
       })
@@ -135,7 +145,10 @@ function App() {
         return response.json();
       })
       .then((count) => {
-        setUser({ ...user, entries: count });
+        setState((prevState) => ({
+          ...prevState,
+          user: { ...prevState.user, entries: count },
+        }));
       })
       .catch((error) => console.error("Error:", error));
   };
@@ -183,39 +196,45 @@ function App() {
 
   const onRouteChange = (route) => {
     if (route === "signout") {
-      setIssignedin(false);
-    } else if (route === "home") {
-      setIssignedin(true);
+      setState(initialState);
+    } else {
+      setState((prevState) => ({
+        ...prevState,
+        route,
+        isSignedIn: route === "home",
+      }));
     }
-    setRoute(route);
   };
 
   const loadUser = (data) => {
-    setUser({
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      entries: data.entries,
-      joined: data.joined,
-    });
+    setState((prevState) => ({
+      ...prevState,
+      user: {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        entries: data.entries,
+        joined: data.joined,
+      },
+    }));
   };
 
   return (
     <div className="App">
       {init && <Particles id="tsparticles" options={particlesOptions} />}
-      <Navigation isSignedIn={issignedin} onRouteChange={onRouteChange} />
+      <Navigation isSignedIn={state.isSignedin} onRouteChange={onRouteChange} />
 
-      {route === "home" ? (
+      {state.route === "home" ? (
         <div>
           <Logo />
-          <Rank userName={user.name} entries={user.entries} />
+          <Rank userName={state.user.name} entries={state.user.entries} />
           <ImageLinkForm
             onInputChange={onInputChange}
             onButtonSubmit={onButtonSubmit}
           />
-          <FaceRecognition boxes={boxes} imageUrl={imageUrl} />
+          <FaceRecognition boxes={state.boxes} imageUrl={state.imageUrl} />
         </div>
-      ) : route === "signin" ? (
+      ) : state.route === "signin" ? (
         <div>
           <Signin loadUser={loadUser} onRouteChange={onRouteChange} />
         </div>
