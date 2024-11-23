@@ -197,13 +197,16 @@ function App() {
   const onRouteChange = (route) => {
     if (route === "signout") {
       setState(initialState);
-    } else {
+    } else if (route === "home") {
       setState((prevState) => ({
         ...prevState,
-        route,
-        isSignedIn: route === "home",
+        isSignedin: true,
       }));
     }
+    setState((prevState) => ({
+      ...prevState,
+      route: route,
+    }));
   };
 
   const loadUser = (data) => {
