@@ -45,38 +45,6 @@ function App() {
     });
   }, []);
 
-  const MODEL_ID = "face-detection";
-  const returnClarifaiRequestOptions = (imageUrl) => {
-    const PAT = "60df1f2fc09b470da2117dde445f6abf";
-    const USER_ID = "af8w21gvcx87";
-    const APP_ID = "image-recognition";
-
-    const raw = JSON.stringify({
-      user_app_id: {
-        user_id: USER_ID,
-        app_id: APP_ID,
-      },
-      inputs: [
-        {
-          data: {
-            image: {
-              url: imageUrl,
-            },
-          },
-        },
-      ],
-    });
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        Authorization: "Key " + PAT,
-      },
-      body: raw,
-    };
-    return requestOptions;
-  };
-
   const calculateFaceLocations = (data) => {
     const image = document.getElementById("inputimage");
     const width = Number(image.width);
@@ -115,21 +83,25 @@ function App() {
       ...prevState,
       imageUrl: prevState.input,
     }));
-    fetch(
-      `https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`,
-      returnClarifaiRequestOptions(state.input)
-    )
+
+    fetch("http://localhost:3000/imageurl", {
+      method: "post",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        input: state.input,
+      }),
+    })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error("Failed to fetch Clarifai response");
         }
-        return response.json(); // Parse the response to JSON
+        return response.json(); // Parse the response from the server
       })
       .then((data) => {
         const faceBoxes = calculateFaceLocations(data);
         displayFaceBoxes(faceBoxes);
 
-        // Update user entries if necessary
+        // Update user entries
         return fetch("http://localhost:3000/image", {
           method: "put",
           headers: { "Content-Type": "application/json" },
