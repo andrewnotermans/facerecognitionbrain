@@ -49,18 +49,17 @@ function App() {
     const image = document.getElementById("inputimage");
     const width = Number(image.width);
     const height = Number(image.height);
-    console.log(data);
-    const regions = data.outputs[0].data.regions;
-    console.log(regions);
-    const boundingBoxes = regions.map((region) => {
-      const boundingBox = region.region_info.bounding_box;
+
+    // Assume `data` contains bounding box info directly
+    const boundingBoxes = data.map((box) => {
       return {
-        leftCol: boundingBox.left_col * width,
-        topRow: boundingBox.top_row * height,
-        rightCol: width - boundingBox.right_col * width,
-        bottomRow: height - boundingBox.bottom_row * height,
+        leftCol: box.leftCol * width,
+        topRow: box.topRow * height,
+        rightCol: width - box.rightCol * width,
+        bottomRow: height - box.bottomRow * height,
       };
     });
+
     return boundingBoxes;
   };
 
@@ -91,38 +90,30 @@ function App() {
         input: state.input,
       }),
     })
+      .then((response) => response.json())
       .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch Clarifai response");
+        if (response) {
+          fetch("http://localhost:3000/image", {
+            method: "put",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: state.user.id,
+            }),
+          })
+            .then((response) => response.json())
+            .then((count) => {
+              setState((prevState) => ({
+                ...prevState,
+                user: { ...prevState.user, entries: count },
+              }));
+            })
+            .catch(console.log);
         }
-        return response.json(); // Parse the response from the server
-      })
-      .then((data) => {
-        const faceBoxes = calculateFaceLocations(data);
-        displayFaceBoxes(faceBoxes);
 
-        // Update user entries
-        return fetch("http://localhost:3000/image", {
-          method: "put",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: state.user.id,
-          }),
-        });
+        // Pass the response data directly to calculateFaceLocations
+        displayFaceBoxes(calculateFaceLocations(response));
       })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to update entries");
-        }
-        return response.json();
-      })
-      .then((count) => {
-        setState((prevState) => ({
-          ...prevState,
-          user: { ...prevState.user, entries: count },
-        }));
-      })
-      .catch((error) => console.error("Error:", error));
+      .catch((err) => console.log(err));
   };
 
   const particlesOptions = {

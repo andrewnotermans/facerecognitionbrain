@@ -13,7 +13,6 @@ const Signin = ({ loadUser, onRouteChange }) => {
   };
 
   const onSubmitSignIn = () => {
-    console.log({ signInEmail, signInPassword });
     fetch("http://localhost:3000/signin", {
       method: "post",
       headers: { "Content-Type": "application/json" },
@@ -24,7 +23,6 @@ const Signin = ({ loadUser, onRouteChange }) => {
     })
       .then((response) => response.json())
       .then((user) => {
-        console.log(user);
         if (user.id) {
           loadUser(user);
           onRouteChange("home");
