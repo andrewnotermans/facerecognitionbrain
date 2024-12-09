@@ -19,8 +19,9 @@ const Register = ({ loadUser, onRouteChange }) => {
 
   const onSubmitSignIn = () => {
     console.log({ email, password });
-    fetch("http://localhost:3000/register", {
+    fetch("https://facerecognitionbrain-api-s6h6.onrender.com/register", {
       method: "post",
+      mode: "cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: email,
@@ -36,7 +37,7 @@ const Register = ({ loadUser, onRouteChange }) => {
         }
       })
       .catch((err) => {
-        console.error("Error during sign-in:", err);
+        console.error("Error during register:", err);
       });
   };
 

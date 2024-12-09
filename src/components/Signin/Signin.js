@@ -13,8 +13,9 @@ const Signin = ({ loadUser, onRouteChange }) => {
   };
 
   const onSubmitSignIn = () => {
-    fetch("http://localhost:3000/signin", {
+    fetch("https://facerecognitionbrain-api-s6h6.onrender.com/signin", {
       method: "post",
+      mode: "cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: signInEmail,

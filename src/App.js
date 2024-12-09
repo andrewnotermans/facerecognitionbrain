@@ -83,8 +83,9 @@ function App() {
       imageUrl: prevState.input,
     }));
 
-    fetch("http://localhost:3000/imageurl", {
+    fetch("https://facerecognitionbrain-api-s6h6.onrender.com/imageurl", {
       method: "post",
+      mode: "cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         input: state.input,
@@ -93,8 +94,9 @@ function App() {
       .then((response) => response.json())
       .then((response) => {
         if (response) {
-          fetch("http://localhost:3000/image", {
+          fetch("https://facerecognitionbrain-api-s6h6.onrender.com/image", {
             method: "put",
+            mode: "cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               id: state.user.id,
